@@ -18,7 +18,7 @@ let failedParseAttempts = _.chain(statuses)
 
 //Prepare pipeline for web scraping
 
-ParsePokemonData(3);
+ParsePokemonData(132);
 
 function ParsePokemonData(pokedexNumber) {
     let hosturl = "http://www.serebii.net";
@@ -33,16 +33,12 @@ function ParsePokemonData(pokedexNumber) {
             let sprite = base64.encode(hosturl + $(".dextab img").attr('src'), { string: true }, (err, res) => {
                 sprite = res;
             });
-            let abilities = _.chain(mainContent("p:nth-child(3) > table:nth-child(3) > tr:nth-child(4) > td:nth-child(3)"))
-                .map((x) => _.chain(x.children)
-                    .filter((x1, i) => i % 2 == 0)
-                    .map((x1) => x1.data)
-                    .map((x1) => /(\d) (.*) Point/.exec(x1))
-                    .map((x1) => _.tail(x1))
+            let genderinfo = _.chain(mainContent("p:nth-child(3) > table:nth-child(2) > tr:nth-child(2) > td:nth-child(5) tr"))
+                .map((x) => $(x).text())
+                .map((x) => _.chain(/(\w*)\s*.:(\d*\.?\d*)%/.exec(x))
                     .value()
                 )
-                .head()
-                .map((x) => { return { "Type": _.last(x), "Value": _.toNumber(_.first(x)) } })
+                .map((x) => { return { "Gender": _.nth(x, 1), "Rate": _.toNumber(_.nth(x, 2)) } })
                 .value();
             return [{
                 // Based On Serebii Spec
@@ -105,8 +101,19 @@ function ParsePokemonData(pokedexNumber) {
                         .head()
                         .map((x) => { return { "Type": _.last(x), "Value": _.toNumber(_.first(x)) } })
                         .value(),
-                    "Egg Groups": ["Grass", "Monster"],
-                    "Gender": { "Male": 87.5, "Female": 12.5 },
+                    "Egg Groups": _.chain(mainContent("p:nth-child(3) > table:nth-child(5)  tr:nth-child(2) td:nth-child(2) .dexitem"))
+                        // .map((x) => _.chain(x.children))
+                        .map((x) => _.map($(x).find('tr > td:nth-child(2)'), (x) =>
+                            $(x).text()))
+                        .head()
+                        .value(),
+                    "Gender": _.chain(mainContent("p:nth-child(3) > table:nth-child(2) > tr:nth-child(2) > td:nth-child(5) tr"))
+                        .map((x) => $(x).text())
+                        .map((x) => _.chain(/(\w*)\s*.:(\d*\.?\d*)%/.exec(x))
+                            .value()
+                        )
+                        .map((x) => { return { "Gender": _.nth(x, 1), "Rate": _.toNumber(_.nth(x, 2)) } })
+                        .value(),
                     "HP": 45,
                     "Attack": 49,
                     "Defense": 49,

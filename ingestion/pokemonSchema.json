@@ -23,7 +23,7 @@
         ],
         "Growth Rate": "Medium Slow",
         "Egg Groups": ["Grass", "Monster"],
-        "Gender": { "Male": 87.5, "Female": 12.5 },
+        "Gender Rates": [{ "Gender": "Female", "Rate": 12.5 }],
         "HP": 45,
         "Attack": 49,
         "Defense": 49,
