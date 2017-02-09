@@ -1,0 +1,41 @@
+{
+    // Based On Serebii Spec
+    "Forms": [{
+        "Form Name": "Normal",
+        "Name": "Bulbasaur",
+        "Other Names": [
+            { "Country": "Japan", "Name": "フシギダネ" }
+        ],
+        "NationalNumber": 1,
+        "Sprite": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+        "Picture": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+        "Shiny Picture": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+        "Type": ["Grass", "Poison"],
+        "Classification": "Seed Pokémon",
+        "Height": 0.71,
+        "Weight": 6.9,
+        "Capture Rate": 45,
+        "Base Egg Steps": 5120,
+        "Abilities": ["Overgrow", "Chlorophyl"],
+        "Base Happiness": 100,
+        "EV Yield": [
+            { "Type": "Special Attack", "Value": 1 }
+        ],
+        "Growth Rate": "Medium Slow",
+        "Egg Groups": ["Grass", "Monster"],
+        "Gender": { "Male": 87.5, "Female": 12.5 },
+        "HP": 45,
+        "Attack": 49,
+        "Defense": 49,
+        "Special Attack": 65,
+        "Special Defense": 65,
+        "Speed": 45,
+        "BaseStatTotal": 318,
+        "Pokedex Entries": [
+            { "Game": "Entry" },
+            { "Game": "Entry" }
+        ]
+
+    }]
+
+}
