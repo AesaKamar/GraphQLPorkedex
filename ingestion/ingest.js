@@ -20,12 +20,15 @@ function getStatusList() { return JSON.parse(fs.readFileSync('./data/status.json
  * @param  {statusArray} statusObject {description}
  * @return {type} {description}
  */
-function setStatusList(statusObject) { fs.writeFileSync('./data/status.json', JSON.stringify(statusObject)) }
+function setStatusList(statusObject) {
+    fs.writeFileSync('./data/status.json', JSON.stringify({ "statuses": statusObject }))
+}
 
 //Filter out the statuses that have already passed
-let pendingParsingList = _.chain(getStatusList())
+let allStatus = getStatusList();
+let pendingParsingList = _.chain(allStatus)
     .filter((x) => x.status == false)
-    .take(1)
+    .take(15)
     .value();
 
 var bar = new ProgressBar(':bar', { total: _.size(pendingParsingList) });
@@ -34,7 +37,7 @@ var bar = new ProgressBar(':bar', { total: _.size(pendingParsingList) });
 //Once a promise is 
 let folderToWriteTo = "./data/pokemon_json/"
     //For All attempts that failed or haven't been completed
-let completedParsingList = (() => Promise.map(pendingParsingList, (parseAttempt) => {
+let completedParsingList = Promise.map(pendingParsingList, (parseAttempt) => {
         bar.tick();
         //Parse the data 
         return ParsePokemonDataPromise(parseAttempt.NationalNumber).then((res) => {
@@ -52,10 +55,11 @@ let completedParsingList = (() => Promise.map(pendingParsingList, (parseAttempt)
         //Compare the completed parsing list and the pending one
         let mergedList = _.merge(getStatusList(), res)
         setStatusList(mergedList);
+        global.EXITCONDITION = true;
         debugger;
     }, (err) => {
         debugger;
-    }))();
+    });
 
 
 
@@ -225,7 +229,7 @@ function ParsePokemonDataPromise(pokedexNumber) {
 
 
 
-let EXITCONDITION = false;
+global.EXITCONDITION = false;
 /**
  * @function wait
  * @return {void} {returns nothing}
