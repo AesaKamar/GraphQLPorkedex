@@ -2,24 +2,63 @@
 const _ = require("lodash");
 const Promise = require("bluebird");
 const fs = require('fs');
+const jsonfile = require('jsonfile-promised')
 const request = require("request-promise");
 const cheerio = require('cheerio')
 const he = require('he');
 const base64 = require("node-base64-image");
+const ProgressBar = require('progress');
 
 //get a list of statuses from the status.json file
-let statuses = JSON.parse(fs.readFileSync('./data/status.json', 'utf8')).statuses;
-
+/**
+ * @function getStatusList
+ * @return {type} {description}
+ */
+function getStatusList() { return JSON.parse(fs.readFileSync('./data/status.json', 'utf8')).statuses };
+/**
+ * @function setStatusList
+ * @param  {statusArray} statusObject {description}
+ * @return {type} {description}
+ */
+function setStatusList(statusObject) { fs.writeFileSync('./data/status.json', JSON.stringify(statusObject)) }
 
 //Filter out the statuses that have already passed
-let failedParseAttempts = _.chain(statuses)
-    .filter((x) => x.status == true)
+let pendingParsingList = _.chain(getStatusList())
+    .filter((x) => x.status == false)
+    .take(1)
     .value();
 
+var bar = new ProgressBar(':bar', { total: _.size(pendingParsingList) });
 
 //Prepare pipeline for web scraping
+//Once a promise is 
+let folderToWriteTo = "./data/pokemon_json/"
+    //For All attempts that failed or haven't been completed
+let completedParsingList = (() => Promise.map(pendingParsingList, (parseAttempt) => {
+        bar.tick();
+        //Parse the data 
+        return ParsePokemonDataPromise(parseAttempt.NationalNumber).then((res) => {
+            //Then Write the results to disk. We need the dex no for the file
+            return jsonfile.writeFile(folderToWriteTo + _.padStart(parseAttempt.NationalNumber, 3, '0') + ".json", res)
+                //Report Success
+                .then((res) => new Promise((resolve, reject) =>
+                        resolve({ "NationalNumber": parseAttempt.NationalNumber, "status": true })),
+                    (err) => {})
+                //Report Error
+        }, (err) => new Promise((resolve, reject) => reject({ "NationalNumber": parseAttempt.NationalNumber, "status": false })))
 
-ParsePokemonDataPromise(13);
+    }, { concurrency: 2 })
+    .then((res) => {
+        //Compare the completed parsing list and the pending one
+        let mergedList = _.merge(getStatusList(), res)
+        setStatusList(mergedList);
+        debugger;
+    }, (err) => {
+        debugger;
+    }))();
+
+
+
 /**
  * @function ParsePokemonDataPromise 
  * @param  {number} pokedexNumber {The National Dex Number of the pokemon you want to retrieve}
@@ -183,3 +222,17 @@ function ParsePokemonDataPromise(pokedexNumber) {
         })
         .catch((err) => new Promise((resolve, reject) => reject(null)))
 }
+
+
+
+let EXITCONDITION = false;
+/**
+ * @function wait
+ * @return {void} {returns nothing}
+ * @description {prevents application from quitting prematurely}
+ */
+function wait() {
+    if (!EXITCONDITION)
+        setTimeout(wait, 1000);
+};
+wait();
