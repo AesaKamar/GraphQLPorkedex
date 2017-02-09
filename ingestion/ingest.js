@@ -2,7 +2,7 @@
 const _ = require("lodash");
 const Promise = require("bluebird");
 const fs = require('fs');
-const request = require("request");
+const request = require("request-promise");
 const cheerio = require('cheerio')
 const he = require('he');
 const base64 = require("node-base64-image");
@@ -19,13 +19,14 @@ let failedParseAttempts = _.chain(statuses)
 
 //Prepare pipeline for web scraping
 
-ParsePokemonData(13);
+ParsePokemonDataPromise(13);
 
-function ParsePokemonData(pokedexNumber) {
+function ParsePokemonDataPromise(pokedexNumber) {
     let hosturl = "http://www.serebii.net";
     let baseURL = "http://www.serebii.net/pokedex-sm/";
-    request(baseURL + _.padStart(pokedexNumber, 3, '0') + ".shtml", (error, response, body) => {
-        if (!error && response.statusCode == 200) {
+    return request(baseURL + _.padStart(pokedexNumber, 3, '0') + ".shtml")
+        .then((body) => {
+
             ///
             /// Main Parsing Logic
             ///
@@ -167,16 +168,13 @@ function ParsePokemonData(pokedexNumber) {
             //Once picture and text scrapings have resolved, merge the objects and resolve them
             return Promise.all([imageScrapingResult, textScrapingResult])
                 .then((res) => {
-                    let imageScrapingResult = _.nth(res, 0);
-                    var textScrapingResult = _.nth(res, 1);
 
-                    let final = _.merge(textScrapingResult, imageScrapingResult);
-
-
+                    let final = _.merge(_.nth(res, 1), _.nth(res, 0));
                     return new Promise((resolve, reject) => resolve(final))
-                }, (err) => {})
-        } else {
-            return new Promise((resolve, reject) => reject(null))
-        }
-    })
+
+                }, (err) => new Promise((resolve, reject) => reject(null)))
+                .catch((err) => new Promise((resolve, reject) => reject(null)))
+
+        })
+        .catch((err) => new Promise((resolve, reject) => reject(null)))
 }
