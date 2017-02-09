@@ -20,7 +20,12 @@ let failedParseAttempts = _.chain(statuses)
 //Prepare pipeline for web scraping
 
 ParsePokemonDataPromise(13);
-
+/**
+ * @function ParsePokemonDataPromise 
+ * @param  {number} pokedexNumber {The National Dex Number of the pokemon you want to retrieve}
+ * @return {Promise} {Containes a Pokemon JSON Record}
+ * @description {Parses Pokemon data from serebii}
+ */
 function ParsePokemonDataPromise(pokedexNumber) {
     let hosturl = "http://www.serebii.net";
     let baseURL = "http://www.serebii.net/pokedex-sm/";
