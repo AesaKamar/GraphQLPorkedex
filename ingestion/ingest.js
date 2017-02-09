@@ -30,15 +30,14 @@ function ParsePokemonData(pokedexNumber) {
             ///
             let $ = cheerio.load(body)
             let mainContent = cheerio.load($.html('div[align="center"] div[align="center"]'));
+            //Images ned to have their promise resolved
             let sprite = base64.encode(hosturl + $(".dextab img").attr('src'), { string: true }, (err, res) => {
                 sprite = res;
             });
-            let genderinfo = _.chain(mainContent("p:nth-child(3) > table:nth-child(2) > tr:nth-child(2) > td:nth-child(5) tr"))
-                .map((x) => $(x).text())
-                .map((x) => _.chain(/(\w*)\s*.:(\d*\.?\d*)%/.exec(x))
-                    .value()
-                )
-                .map((x) => { return { "Gender": _.nth(x, 1), "Rate": _.toNumber(_.nth(x, 2)) } })
+            let statsHP = _.chain($('a[name="stats"] + table tr:nth-child(3) td:nth-child(1)').text())
+                .thru((x) => /(\d+)/.exec(x))
+                .last()
+                .toNumber()
                 .value();
             return [{
                 // Based On Serebii Spec
@@ -107,24 +106,40 @@ function ParsePokemonData(pokedexNumber) {
                             $(x).text()))
                         .head()
                         .value(),
-                    "Gender": _.chain(mainContent("p:nth-child(3) > table:nth-child(2) > tr:nth-child(2) > td:nth-child(5) tr"))
+                    "Gender Rates": _.chain(mainContent("p:nth-child(3) > table:nth-child(2) > tr:nth-child(2) > td:nth-child(5) tr"))
                         .map((x) => $(x).text())
                         .map((x) => _.chain(/(\w*)\s*.:(\d*\.?\d*)%/.exec(x))
                             .value()
                         )
                         .map((x) => { return { "Gender": _.nth(x, 1), "Rate": _.toNumber(_.nth(x, 2)) } })
                         .value(),
-                    "HP": 45,
-                    "Attack": 49,
-                    "Defense": 49,
-                    "Special Attack": 65,
-                    "Special Defense": 65,
-                    "Speed": 45,
-                    "BaseStatTotal": 318,
-                    "Pokedex Entries": [
-                        { "Game": "Entry" },
-                        { "Game": "Entry" }
-                    ]
+                    "HP": _.chain($('a[name="stats"] + table tr:nth-child(3) td:nth-child(2)').text())
+                        .toNumber()
+                        .value(),
+                    "Attack": _.chain($('a[name="stats"] + table tr:nth-child(3) td:nth-child(3)').text())
+                        .toNumber()
+                        .value(),
+                    "Defense": _.chain($('a[name="stats"] + table tr:nth-child(3) td:nth-child(4)').text())
+                        .toNumber()
+                        .value(),
+                    "Special Attack": _.chain($('a[name="stats"] + table tr:nth-child(3) td:nth-child(5)').text())
+                        .toNumber()
+                        .value(),
+                    "Special Defense": _.chain($('a[name="stats"] + table tr:nth-child(3) td:nth-child(6)').text())
+                        .toNumber()
+                        .value(),
+                    "Speed": _.chain($('a[name="stats"] + table tr:nth-child(3) td:nth-child(7)').text())
+                        .toNumber()
+                        .value(),
+                    "BaseStatTotal": _.chain($('a[name="stats"] + table tr:nth-child(3) td:nth-child(1)').text())
+                        .thru((x) => /(\d+)/.exec(x))
+                        .last()
+                        .toNumber()
+                        .value(),
+                    // "Pokedex Entries": [
+                    //     { "Game": "Entry" },
+                    //     { "Game": "Entry" }
+                    // ]
 
                 }]
 
