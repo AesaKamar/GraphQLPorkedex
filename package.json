@@ -9,12 +9,14 @@
   "author": "Aesa Kamar",
   "license": "ISC",
   "dependencies": {
+    "bluebird": "^3.4.7",
     "cheerio": "^0.22.0",
     "fs": "0.0.1-security",
     "he": "^1.1.1",
     "lodash": "^4.17.4",
     "node-base64-image": "^1.0.3",
     "request": "^2.79.0",
+    "request-promise": "^4.1.1",
     "unique-selector": "^0.3.0"
   }
 }
