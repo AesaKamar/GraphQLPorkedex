@@ -21,15 +21,18 @@ function getStatusList() { return JSON.parse(fs.readFileSync('./data/status.json
  * @return {type} {description}
  */
 function setStatusList(statusObject) {
-    fs.writeFileSync('./data/status.json', JSON.stringify({ "statuses": statusObject }))
+    fs.writeFileSync('./data/status.json', JSON.stringify({ "statuses": _.sortBy(statusObject, ['NationalNumber']) }))
 }
+
 
 //Filter out the statuses that have already passed
 let allStatus = getStatusList();
 let pendingParsingList = _.chain(allStatus)
     .filter((x) => x.status == false)
-    .take(15)
+    .take(1)
     .value();
+
+
 
 var bar = new ProgressBar(':bar', { total: _.size(pendingParsingList) });
 
@@ -37,30 +40,43 @@ var bar = new ProgressBar(':bar', { total: _.size(pendingParsingList) });
 //Once a promise is 
 let folderToWriteTo = "./data/pokemon_json/"
     //For All attempts that failed or haven't been completed
-let completedParsingList = Promise.map(pendingParsingList, (parseAttempt) => {
-        bar.tick();
-        //Parse the data 
-        return ParsePokemonDataPromise(parseAttempt.NationalNumber).then((res) => {
-            //Then Write the results to disk. We need the dex no for the file
-            return jsonfile.writeFile(folderToWriteTo + _.padStart(parseAttempt.NationalNumber, 3, '0') + ".json", res)
-                //Report Success
-                .then((res) => new Promise((resolve, reject) =>
-                        resolve({ "NationalNumber": parseAttempt.NationalNumber, "status": true })),
-                    (err) => {})
-                //Report Error
-        }, (err) => new Promise((resolve, reject) => reject({ "NationalNumber": parseAttempt.NationalNumber, "status": false })))
 
-    }, { concurrency: 2 })
-    .then((res) => {
-        //Compare the completed parsing list and the pending one
-        let mergedList = _.merge(getStatusList(), res)
-        setStatusList(mergedList);
-        global.EXITCONDITION = true;
-        debugger;
-    }, (err) => {
-        debugger;
-    });
+let chunkedPendingParsingList = _.chunk(pendingParsingList, 3);
 
+setInterval(() => {
+    _.isEmpty(chunkedPendingParsingList) ? process.exit() : parseAndSaveToDisk(chunkedPendingParsingList.pop());
+}, 5000)
+
+/**
+ * @function parseAndSaveToDisk
+ * @param  {type} chunks {description}
+ * @return {type} {description}
+ */
+function parseAndSaveToDisk(chunks) {
+    return Promise.map(chunks, (parseAttempt) => {
+            bar.tick();
+            //Parse the data 
+            return ParsePokemonDataPromise(parseAttempt.NationalNumber).then((res) => {
+                //Then Write the results to disk. We need the dex no for the file
+                return jsonfile.writeFile(folderToWriteTo + _.padStart(parseAttempt.NationalNumber, 3, '0') + ".json", res)
+                    //Report Success
+                    .then((res) => new Promise((resolve, reject) =>
+                            resolve({ "NationalNumber": parseAttempt.NationalNumber, "status": true })),
+                        (err) => {})
+                    //Report Error
+            }, (err) => new Promise((resolve, reject) => reject({ "NationalNumber": parseAttempt.NationalNumber, "status": false })))
+
+        }, { concurrency: 2 })
+        .then((res) => {
+            //Compare the completed parsing list and the pending one
+            let mergedList = _.merge(getStatusList(), res)
+            setStatusList(mergedList);
+            // global.EXITCONDITION = true;
+            debugger;
+        }, (err) => {
+            debugger;
+        });
+}
 
 
 /**
@@ -72,6 +88,7 @@ let completedParsingList = Promise.map(pendingParsingList, (parseAttempt) => {
 function ParsePokemonDataPromise(pokedexNumber) {
     let hosturl = "http://www.serebii.net";
     let baseURL = "http://www.serebii.net/pokedex-sm/";
+    let reqURL = baseURL + _.padStart(pokedexNumber, 3, '0') + ".shtml";
     return request(baseURL + _.padStart(pokedexNumber, 3, '0') + ".shtml")
         .then((body) => {
 
@@ -224,7 +241,8 @@ function ParsePokemonDataPromise(pokedexNumber) {
                 .catch((err) => new Promise((resolve, reject) => reject(null)))
 
         })
-        .catch((err) => new Promise((resolve, reject) => reject(null)))
+        .catch((err) =>
+            new Promise((resolve, reject) => reject(null)))
 }
 
 
@@ -235,8 +253,8 @@ global.EXITCONDITION = false;
  * @return {void} {returns nothing}
  * @description {prevents application from quitting prematurely}
  */
-function wait() {
-    if (!EXITCONDITION)
-        setTimeout(wait, 1000);
-};
-wait();
+// function wait() {
+//     if (!EXITCONDITION)
+//         setTimeout(wait, 1000);
+// };
+// wait();

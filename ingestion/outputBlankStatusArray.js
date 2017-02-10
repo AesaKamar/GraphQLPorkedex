@@ -2,10 +2,14 @@
 const _ = require("lodash");
 
 
-// let statusArray = _.zipObject(_.range(1, 803), _.fill(Array(803), false));
+let highestReached = 112;
 
-let statusArray = _.chain(_.range(1, 803))
+let goodStatusArray = _.chain(_.range(1, highestReached + 1))
+    .map((x) => { return { "NationalNumber": x, status: true } })
+    .value();
+let badStatusArray = _.chain(_.range(highestReached + 1, 803))
     .map((x) => { return { "NationalNumber": x, status: false } })
-    .value()
+    .value();
+let statusArray = _.concat(goodStatusArray, badStatusArray);
 
 console.log(JSON.stringify({ statuses: statusArray }));
